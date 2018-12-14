@@ -212,7 +212,8 @@ export default class App extends Component {
               confirm: {
                 showUpdate: false
               }
-            })
+            });
+            Keyboard.dismiss();
           }}
           onConfirmPressed={
             this.update
