@@ -1,5 +1,5 @@
 import React, {Component} from 'react';
-import { FlatList,TouchableOpacity,StyleSheet,Keyboard,View } from 'react-native';
+import { FlatList,TouchableOpacity,StyleSheet,Keyboard,View,Alert } from 'react-native';
 import { Container, Text, Input, Row, Col, Content, Button, Item, ListItem, Header, Title, Icon } from 'native-base';
 import axios from 'axios';
 
@@ -34,11 +34,11 @@ export default class App extends Component {
     axios.post(this.url, {
       text: set,
     }).then(() => {
-        alert('Added')
+        Alert.alert('Added','Success')
         this.get()
         this.setState({set:''})
     }).catch(() => {
-      alert('Please input your to do.');
+      Alert.alert('Error!','Please input your to do.');
     });
     Keyboard.dismiss();
   }
@@ -63,7 +63,7 @@ export default class App extends Component {
         id: '',
         set: '',
       });
-      alert('Saved')
+      Alert.alert('Saved','Success')
       this.get()
     });
     Keyboard.dismiss();
@@ -85,7 +85,7 @@ export default class App extends Component {
   delete = (id) => {
     axios.delete(this.url+id)
     .then(response => {
-      alert('Deleted');
+      Alert.alert('Deleted','Success');
       this.setState({
         action: 'add',
         id: '',
