@@ -20,7 +20,8 @@ export default class App extends Component {
     };
   }
 
-  url = 'http://192.168.0.45:5000/api/todo/';
+  // url = 'http://192.168.0.45:5000/api/todo/';
+  url = 'https://ariefyusrontodoapi.herokuapp.com/api/todo/';
 
   get(){
     axios.get(this.url)
