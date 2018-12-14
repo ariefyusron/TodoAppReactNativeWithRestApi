@@ -60,9 +60,16 @@ export default class App extends Component {
       text: set,
     }).then(() => {
         this.get()
-        this.setState({set:''})
     }).catch(() => {
       alert('Please input your to do.');
+    });
+    this.setState({
+      set:'',
+      id: '',
+      confirm: {
+        showDelete: false,
+        showDelete: false
+      }
     });
     Keyboard.dismiss();
   }
@@ -73,7 +80,11 @@ export default class App extends Component {
       this.setState({
         action: 'update',
         id: id,
-        set: response.data.text
+        set: response.data.text,
+        confirm: {
+          showUpdate: false,
+          showDelete: false
+        }
       });
     });
   }
@@ -89,7 +100,8 @@ export default class App extends Component {
       id: '',
       set: '',
       confirm: {
-        showUpdate: false
+        showUpdate: false,
+        showDelete: false
       }
     });
     Keyboard.dismiss();
@@ -99,13 +111,23 @@ export default class App extends Component {
     this.setState({
       action: 'add',
       id: '',
-      set: ''
+      set: '',
+      confirm: {
+        showUpdate: false,
+        showDelete: false
+      }
     });
     Keyboard.dismiss();
   }
 
   set(text){
-    this.setState({set:text});
+    this.setState({
+      set:text,
+      confirm: {
+        showUpdate: false,
+        showDelete: false
+      }
+    });
   }
 
   delete = () => {
@@ -118,7 +140,8 @@ export default class App extends Component {
       id: '',
       set: '',
       confirm: {
-        showDelete: false
+        showDelete: false,
+        showUpdate: false
       }
     });
   }
@@ -162,7 +185,7 @@ export default class App extends Component {
             keyExtractor={(item) => item._id}
             renderItem={
               ({item}) =>
-                <ListItem style={styles.listitem}>
+                <ListItem itemDivider={item._id==this.state.id ? true:false} style={styles.listitem}>
                   <TouchableOpacity style={styles.touch} onPress={()=>{this.selectUpdate(item._id)}} onLongPress={()=>this.confirmDelete(item._id)}>
                     <Text style={{width:100+'%'}}>{item.text}</Text>
                   </TouchableOpacity>
