@@ -1,6 +1,7 @@
 import React, {Component} from 'react';
-import { FlatList,TouchableOpacity,StyleSheet,Keyboard,View,Alert } from 'react-native';
+import { FlatList,TouchableOpacity,StyleSheet,Keyboard,View } from 'react-native';
 import { Container, Text, Input, Row, Col, Content, Button, Item, ListItem, Header, Title, Icon } from 'native-base';
+import Alert from 'react-native-awesome-alerts';
 import axios from 'axios';
 
 export default class App extends Component {
@@ -11,7 +12,11 @@ export default class App extends Component {
       action: 'add',
       id: '',
       set: '',
-      data: []
+      data: [],
+      confirm: {
+        showDelete: false,
+        showUpdate: false
+      },
     };
   }
 
@@ -29,16 +34,34 @@ export default class App extends Component {
     this.get();
   }
 
+  confirmUpdate = () => {
+    this.setState({
+      confirm: {
+        showUpdate: true,
+        showDelete: false
+      }
+    });
+  }
+
+  confirmDelete = (id) => {
+    this.setState({
+      id: id,
+      confirm: {
+        showUpdate: false,
+        showDelete: true
+      }
+    });
+  }
+
   add = () => {
     set = this.state.set;
     axios.post(this.url, {
       text: set,
     }).then(() => {
-        Alert.alert('Added','Success')
         this.get()
         this.setState({set:''})
     }).catch(() => {
-      Alert.alert('Error!','Please input your to do.');
+      alert('Please input your to do.');
     });
     Keyboard.dismiss();
   }
@@ -58,13 +81,15 @@ export default class App extends Component {
     axios.put(this.url+this.state.id, {
       text: this.state.set
     }).then(response => {
-      this.setState({
-        action: 'add',
-        id: '',
-        set: '',
-      });
-      Alert.alert('Saved','Success')
       this.get()
+    });
+    this.setState({
+      action: 'add',
+      id: '',
+      set: '',
+      confirm: {
+        showUpdate: false
+      }
     });
     Keyboard.dismiss();
   }
@@ -82,17 +107,19 @@ export default class App extends Component {
     this.setState({set:text});
   }
 
-  delete = (id) => {
-    axios.delete(this.url+id)
+  delete = () => {
+    axios.delete(this.url+this.state.id)
     .then(response => {
-      Alert.alert('Deleted','Success');
-      this.setState({
-        action: 'add',
-        id: '',
-        set: ''
-      });
       this.get();
-    })
+    });
+    this.setState({
+      action: 'add',
+      id: '',
+      set: '',
+      confirm: {
+        showDelete: false
+      }
+    });
   }
 
   render() {
@@ -103,7 +130,7 @@ export default class App extends Component {
               </Button>
     } else{      
        button = <Row style={{height:100+'%'}}>
-                  <Button onPress={this.update} style={styles.button}>
+                  <Button onPress={this.confirmUpdate} style={styles.button}>
                     <Icon name='save' type='MaterialIcons'></Icon>
                   </Button>                  
                   <Button danger onPress={this.cancel} style={[styles.button,{backgroundColor:'white'}]}>
@@ -135,13 +162,64 @@ export default class App extends Component {
             renderItem={
               ({item}) =>
                 <ListItem style={styles.listitem}>
-                  <TouchableOpacity style={styles.touch} onPress={()=>{this.selectUpdate(item._id)}} onLongPress={()=>this.delete(item._id)}>
+                  <TouchableOpacity style={styles.touch} onPress={()=>{this.selectUpdate(item._id)}} onLongPress={()=>this.confirmDelete(item._id)}>
                     <Text style={{width:100+'%'}}>{item.text}</Text>
                   </TouchableOpacity>
                 </ListItem>
             }
           />
         </Content>
+        
+        {/* confirm update */}
+        <Alert
+          show={this.state.confirm.showUpdate}
+          showProgress={false}
+          title="Update"
+          message="You sure?"
+          closeOnTouchOutside={true}
+          closeOnHardwareBackPress={true}
+          showCancelButton={true}
+          showConfirmButton={true}
+          cancelText="No, cancel"
+          confirmText="Yes, save it"
+          confirmButtonColor="#DD6B55"
+          onCancelPressed={() => {
+            this.setState({
+              confirm: {
+                showUpdate: false
+              }
+            })
+          }}
+          onConfirmPressed={
+            this.update
+          }
+        />
+
+        {/* confirm delete */}
+        <Alert
+          show={this.state.confirm.showDelete}
+          showProgress={false}
+          title="Delete"
+          message="You sure?"
+          closeOnTouchOutside={true}
+          closeOnHardwareBackPress={true}
+          showCancelButton={true}
+          showConfirmButton={true}
+          cancelText="No, cancel"
+          confirmText="Yes, delete it"
+          confirmButtonColor="#DD6B55"
+          onCancelPressed={() => {
+            this.setState({
+              id: '',
+              confirm: {
+                showDelete: false
+              }
+            })
+          }}
+          onConfirmPressed={
+            this.delete
+          }
+        />
       </Container>
     );
   }
