@@ -1,6 +1,6 @@
 import React, {Component} from 'react';
-import { FlatList,TouchableOpacity,StyleSheet,Keyboard } from 'react-native';
-import { Container, Text, Input, Row, Col, Content, Button, Item, ListItem, Header, Title } from 'native-base';
+import { FlatList,TouchableOpacity,StyleSheet,Keyboard,View } from 'react-native';
+import { Container, Text, Input, Row, Col, Content, Button, Item, ListItem, Header, Title, Icon } from 'native-base';
 import axios from 'axios';
 
 export default class App extends Component {
@@ -8,6 +8,8 @@ export default class App extends Component {
   constructor(){
     super();
     this.state={
+      action: 'add',
+      id: '',
       set: '',
       data: []
     };
@@ -24,7 +26,7 @@ export default class App extends Component {
   }
 
   componentDidMount() {
-    this.get()
+    this.get();
   }
 
   add = () => {
@@ -41,42 +43,99 @@ export default class App extends Component {
     Keyboard.dismiss();
   }
 
+  selectUpdate = (id) => {
+    axios.get(this.url+id)
+    .then(response => {
+      this.setState({
+        action: 'update',
+        id: id,
+        set: response.data.text
+      });
+    });
+  }
+
+  update = () => {
+    axios.put(this.url+this.state.id, {
+      text: this.state.set
+    }).then(response => {
+      this.setState({
+        action: 'add',
+        id: '',
+        set: '',
+      });
+      alert('Saved')
+      this.get()
+    });
+    Keyboard.dismiss();
+  }
+
+  cancel = () => {
+    this.setState({
+      action: 'add',
+      id: '',
+      set: ''
+    });
+    Keyboard.dismiss();
+  }
+
   set(text){
     this.setState({set:text});
   }
 
   delete = (id) => {
     axios.delete(this.url+id)
-    .then(res => {
-      alert('Deleted')
+    .then(response => {
+      alert('Deleted');
+      this.setState({
+        action: 'add',
+        id: '',
+        set: ''
+      });
       this.get();
     })
   }
 
   render() {
+    const action = this.state.action;
+    if(action=='add'){
+      button = <Button onPress={this.add} style={styles.button}>
+                <Text>add</Text>
+              </Button>
+    } else{      
+       button = <Row style={{height:100+'%'}}>
+                  <Button onPress={this.update} style={styles.button}>
+                    <Icon name='save' type='MaterialIcons'></Icon>
+                  </Button>                  
+                  <Button danger onPress={this.cancel} style={[styles.button,{backgroundColor:'white'}]}>
+                  <Icon name='close' style={{color:'grey'}} type='MaterialIcons'></Icon>
+                  </Button>
+                </Row>
+    };
+
     return (
       <Container>
+        <View style={[{height:40},styles.header]}>
+          <Title style={{color:'black',marginTop:-2}}>TO DO APP</Title>
+        </View>
         <Header style={styles.header}>
-          <Title style={{color:'black'}}>TO DO APP</Title>
-        </Header>
-        <Content style={{marginTop:5}}>
           <Row style={{justifyContent:'center'}}>
             <Col style={{flex:0.98}}>
               <Item style={{borderBottomColor:'white'}}>
-                <Input value={this.state.set} onSubmitEditing={this.add} onChangeText={(text)=>this.set(text)} placeholder='Type to add to do List' style={styles.input} />
-                <Button onPress={this.add} style={styles.button}>
-                  <Text>Add</Text>
-                </Button>
+                <Input value={this.state.set} onChangeText={(text)=>this.set(text)} placeholder='Type to add to do List' style={styles.input} />
+                {button}
               </Item>
             </Col>
           </Row>
+        </Header>
+        <Content style={{marginTop:5}}>
           <FlatList
-            data={this.state.data.sort((a, b) => b.id-a.id)}
+            data={this.state.data}
+            extraData={this.state}
             keyExtractor={(item) => item._id}
             renderItem={
               ({item}) =>
                 <ListItem style={styles.listitem}>
-                  <TouchableOpacity style={styles.touch} onLongPress={()=>this.delete(item._id)}>
+                  <TouchableOpacity style={styles.touch} onPress={()=>{this.selectUpdate(item._id)}} onLongPress={()=>this.delete(item._id)}>
                     <Text style={{width:100+'%'}}>{item.text}</Text>
                   </TouchableOpacity>
                 </ListItem>
@@ -90,6 +149,7 @@ export default class App extends Component {
 
 const styles = StyleSheet.create({
   header: {
+    justifyContent: 'center',
     alignItems:'center',
     backgroundColor:'white'
   },
@@ -108,7 +168,9 @@ const styles = StyleSheet.create({
   listitem: {
     paddingBottom:0,
     paddingTop:0,
-    height:50
+    paddingLeft:10,
+    height:50,
+    marginLeft: 0
   },
   touch: {
     flex:1,
